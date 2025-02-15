@@ -32,7 +32,7 @@ export class MyElement extends LitElement {
   cards: Card[] = [];
 
   @state()
-  currentIndex?: number;
+  currentIndex = 0;
 
   @property({ reflect: true })
   state: 'start' | 'playing' = "playing";
@@ -56,20 +56,16 @@ export class MyElement extends LitElement {
   }
 
   renderPlaying() {
-    this.playingActions();
     return html`
-      ${this._shuffle(this.cards).map((card, index) => html`
-        <div class="card" data-card=${index} ?data-is-active=${this._isActiveCard(index)}>
-          ${this._shuffle(card).map(symbol => html`<div class="symbol" data-symbol=${symbol}>${symbol}</div>`)}
-        </div>
-      `)}
+      <button class="action" @click=${() => this.currentIndex = this.currentIndex + 2}>next</button>
+      <div class="card-container">
+        ${this._shuffle(this.cards).map((card, index) => html`
+          <div class="card" data-card=${index} ?data-is-active=${this._isActiveCard(index)} ?data-is-previous=${this._isPreviousCard(index)}>
+            ${this._shuffle(card).map(symbol => html`<div class="symbol" data-symbol=${symbol}>${symbol}</div>`)}
+          </div>
+        `)}
+      </div>
     `;
-  }
-
-  async playingActions() {
-    this.currentIndex = 0;
-    await new Promise(res => setTimeout(res, 1000));
-    this.setAttribute('animate', '');
   }
 
   /**
@@ -85,6 +81,10 @@ export class MyElement extends LitElement {
    */
   _isActiveCard(cardIndex: number): boolean {
     return cardIndex === this.currentIndex || cardIndex === this.currentIndex + 1;
+  }
+
+  _isPreviousCard(cardIndex: number): boolean {
+    return cardIndex + 1 === this.currentIndex || cardIndex + 2 === this.currentIndex;
   }
 
   private _generate() {
