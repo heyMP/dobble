@@ -1,9 +1,7 @@
-import { LitElement, PropertyValueMap, css, html } from 'lit'
+import { LitElement, html, unsafeCSS } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
-import stylesRaw from './dobble-game.css?raw';
-
-const styles = new CSSStyleSheet();
-styles.replaceSync(stylesRaw);
+import styles from './dobble-game.css?raw';
+import animationStyles from 'open-props/animations.shadow.min.css?raw';
 
 const SYMBOLS = [
   "😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇",
@@ -13,8 +11,6 @@ const SYMBOLS = [
   "😫", "😩", "🥺", "😢", "😭", "😤", "😠", "😡", "🤬", "🤯",
   "😳", "🥵", "🥶", "😱", "😨", "😰", "😥"
 ];
-
-console.log(SYMBOLS.length)
 
 type Card = typeof SYMBOLS;
 
@@ -39,7 +35,7 @@ export class MyElement extends LitElement {
   currentIndex?: number;
 
   @property({ reflect: true })
-  state: 'start' | 'playing' = "start";
+  state: 'start' | 'playing' = "playing";
 
   constructor() {
     super();
@@ -60,13 +56,20 @@ export class MyElement extends LitElement {
   }
 
   renderPlaying() {
+    this.playingActions();
     return html`
       ${this._shuffle(this.cards).map((card, index) => html`
         <div class="card" data-card=${index} ?data-is-active=${this._isActiveCard(index)}>
           ${this._shuffle(card).map(symbol => html`<div class="symbol" data-symbol=${symbol}>${symbol}</div>`)}
         </div>
       `)}
-    `
+    `;
+  }
+
+  async playingActions() {
+    this.currentIndex = 0;
+    await new Promise(res => setTimeout(res, 1000));
+    this.setAttribute('animate', '');
   }
 
   /**
@@ -81,8 +84,7 @@ export class MyElement extends LitElement {
    * CONDITIONALS
    */
   _isActiveCard(cardIndex: number): boolean {
-    console.log(cardIndex, this.currentIndex)
-    return cardIndex === this.currentIndex;
+    return cardIndex === this.currentIndex || cardIndex === this.currentIndex + 1;
   }
 
   private _generate() {
@@ -123,7 +125,10 @@ export class MyElement extends LitElement {
     return org;
   }
 
-  static styles = styles;
+  static styles = [
+    unsafeCSS(styles),
+    unsafeCSS(animationStyles),
+  ];
 }
 
 declare global {

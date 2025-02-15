@@ -11,11 +11,38 @@
 .card {
   padding: 3rem;
   background: white;
-  display: grid;
+  display: none;
   gap: 1rem;
   grid-template-columns: repeat(4, 1fr);
+  box-shadow: var(--shadow-3);
+  border-radius: var(--radius-conditional-3);
+  opacity: 0;
+
+  &[data-is-active] {
+    animation: var(--animation-slide-in-up), var(--animation-fade-in) forwards;
+    display: grid;
+  }
 }
 
 .symbol {
   font-size: 3rem;
 }
+
+@keyframes test {
+  from {
+    transform: translateY(100px);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+/**/
+/* .card:not([data-is-active]) { */
+/*   display: none; */
+/* } */
+/**/
+/* .card:not([data-is-active]) { */
+/*   display: none; */
+/* } */
