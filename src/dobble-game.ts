@@ -34,6 +34,9 @@ export class MyElement extends LitElement {
   @state()
   currentIndex = 0;
 
+  @property({ reflect: true, type: Boolean, attribute: 'wrong-selection' })
+  wrongSelection = false;
+
   @property({ reflect: true })
   state: 'start' | 'playing' = "playing";
 
@@ -57,11 +60,10 @@ export class MyElement extends LitElement {
 
   renderPlaying() {
     return html`
-      <button class="action" @click=${() => this.currentIndex = this.currentIndex + 2}>next</button>
-      <div class="card-container">
-        ${this._shuffle(this.cards).map((card, index) => html`
+      <div class="card-container" @click=${this._cardClicked}>
+        ${this.cards.map((card, index) => html`
           <div class="card" data-card=${index} ?data-is-active=${this._isActiveCard(index)} ?data-is-previous=${this._isPreviousCard(index)}>
-            ${this._shuffle(card).map(symbol => html`<div class="symbol" data-symbol=${symbol}>${symbol}</div>`)}
+            ${card.map(symbol => html`<button class="symbol" data-symbol=${symbol}>${symbol}</button>`)}
           </div>
         `)}
       </div>
@@ -74,6 +76,29 @@ export class MyElement extends LitElement {
   private _startGameAction(): void {
     this.state = 'playing';
     this.currentIndex = 0;
+  }
+
+  private _cardClicked(e: Event): void {
+    if (this.wrongSelection) return;
+
+    const target = e.composedPath()[0] as HTMLElement;
+    if (!target) return;
+    if (!target.classList.contains('symbol')) return;
+
+    const symbol = target.dataset.symbol;
+    const matches = [...this.shadowRoot?.querySelectorAll(`[data-is-active] [data-symbol=${symbol}]`) ?? []].length;
+    if (matches === 2) {
+      this._matchSelected();
+    }
+    else {
+      this.wrongSelection = true;
+      target.classList.add('wrong');
+    }
+  }
+
+  private _matchSelected(): void {
+    this.currentIndex = this.currentIndex + 2;
+    this.wrongSelection = false;
   }
 
   /**
@@ -101,6 +126,7 @@ export class MyElement extends LitElement {
       const card = [symbols[0]];
       for (let j = 0; j < n; j++) {
         card.push(symbols[1 + i * n + j]);
+        this._shuffle(card);
       }
       deck.push(card);
     }
@@ -111,18 +137,19 @@ export class MyElement extends LitElement {
         const card = [symbols[1 + i]];
         for (let k = 0; k < n; k++) {
           card.push(symbols[1 + n + k * n + ((i * k + j) % n)]);
+          this._shuffle(card);
         }
         deck.push(card);
       }
     }
 
+    this._shuffle(deck);
+
     this.cards = deck;
   }
 
-  private _shuffle(array) {
-    const org = [...array];
-    org.sort(() => Math.random() - 0.5);
-    return org;
+  private _shuffle(arry: any[]): void {
+    arry.sort(() => Math.random() - 0.5);
   }
 
   static styles = [
