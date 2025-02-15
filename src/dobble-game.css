@@ -25,10 +25,7 @@
   border-radius: var(--radius-conditional-3);
   grid-column-start: 1;
   grid-row-start: 1;
-
-  &:not([data-is-active], [data-is-previous]) {
-    opacity: 0;
-  }
+  opacity: 0;
 
   &[data-is-active] {
     animation: var(--animation-slide-in-up), var(--animation-fade-in) forwards;
@@ -43,6 +40,7 @@
     animation: var(--animation-slide-out-up), var(--animation-fade-out) forwards;
     display: grid;
     grid-column-start: 1;
+    opacity: 1;
 
     + [data-is-previous] {
       grid-column-start: 2;
