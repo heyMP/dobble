@@ -1,19 +1,17 @@
 {
   "name": "dobble-game",
-  "version": "0.0.0",
-  "type": "module",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {},
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "app:dev": "npm run dev -w app",
+    "server:dev": "npm run dev -w server"
   },
-  "dependencies": {
-    "@lit-labs/router": "^0.1.4",
-    "lit": "^3.2.1",
-    "open-props": "^1.7.12"
-  },
-  "devDependencies": {
-    "typescript": "~5.7.2",
-    "vite": "^6.1.0"
-  }
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "workspaces": [
+    "packages/*"
+  ]
 }

@@ -2,8 +2,10 @@ import { Router } from '@lit-labs/router';
 import { LitElement, html, unsafeCSS } from 'lit'
 import { customElement } from 'lit/decorators.js'
 import styles from './dobble-game.css?raw';
-import './views/dobble-home.js';
-import './views/dobble-playing.js';
+import "open-props/open-props.min.css?css";
+import './partykit.ts';
+import './views/dobble-home.ts';
+import './views/dobble-playing.ts';
 
 /**
  * An example element.
@@ -15,14 +17,14 @@ import './views/dobble-playing.js';
 export class MyElement extends LitElement {
   private _routes = new Router(this, [
     { path: '/', render: () => html`<dobble-home></dobble-home>`},
-    { path: '/play', render: () => html`<dobble-playing></dobble-playing>`}
+    { path: '/play/:id', render: ({id}) => html`<dobble-playing .id=${id}></dobble-playing>`}
   ])
 
-  render() {
+  override render() {
     return html`${this._routes.outlet()}`;
   }
 
-  static styles = unsafeCSS(styles);
+  static override styles = unsafeCSS(styles);
 }
 
 declare global {

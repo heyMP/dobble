@@ -1,9 +1,10 @@
-import { LitElement, html, unsafeCSS } from 'lit'
+import { LitElement, PropertyValues, html, unsafeCSS } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import styles from './dobble-playing.css?raw';
 import animationStyles from 'open-props/animations.shadow.min.css?raw';
-import { SYMBOLS } from '../lib/symbols.js';
-import type { Card } from '../lib/types.js';
+import { SYMBOLS } from '../lib/symbols.ts';
+import type { Card } from '../lib/types.ts';
+import { partykit } from '../partykit.ts';
 
 /**
  * An example element.
@@ -13,9 +14,13 @@ import type { Card } from '../lib/types.js';
  */
 @customElement('dobble-playing')
 export class MyElement extends LitElement {
+
   /**
    * The number of times the button has been clicked.
    */
+  @state()
+  id?: string;
+
   @property({ type: Number })
   symbols = 8;
 
@@ -33,10 +38,16 @@ export class MyElement extends LitElement {
 
   constructor() {
     super();
-    this._generate();
   }
 
-  render() {
+  protected updated(changedProperties: PropertyValues): void {
+    if (changedProperties.has('id')) {
+      if (!this.id) return;
+      partykit(this.id);
+    }
+  }
+
+  override render() {
     if (this.state === 'start') {
       return this.renderStart();
     }
@@ -103,47 +114,8 @@ export class MyElement extends LitElement {
     return cardIndex + 1 === this.currentIndex || cardIndex + 2 === this.currentIndex;
   }
 
-  private _generate() {
-    if (this.symbols < 2) throw new Error("Each card must have at least 2 symbols");
 
-    const n = this.symbols - 1;
-    const deck: Card[] = [];
-
-    // Generate symbols (can be emojis, letters, etc.)
-    const symbols = Array.from({ length: n * n + n + 1 }, (_, i) => SYMBOLS[i]);
-
-    // Generate n cards each containing the first symbol and a unique set
-    for (let i = 0; i < n; i++) {
-      const card = [symbols[0]];
-      for (let j = 0; j < n; j++) {
-        card.push(symbols[1 + i * n + j]);
-        this._shuffle(card);
-      }
-      deck.push(card);
-    }
-
-    // Generate remaining cards
-    for (let i = 0; i < n; i++) {
-      for (let j = 0; j < n; j++) {
-        const card = [symbols[1 + i]];
-        for (let k = 0; k < n; k++) {
-          card.push(symbols[1 + n + k * n + ((i * k + j) % n)]);
-          this._shuffle(card);
-        }
-        deck.push(card);
-      }
-    }
-
-    this._shuffle(deck);
-
-    this.cards = deck;
-  }
-
-  private _shuffle(arry: any[]): void {
-    arry.sort(() => Math.random() - 0.5);
-  }
-
-  static styles = [
+  static override styles = [
     unsafeCSS(styles),
     unsafeCSS(animationStyles),
   ];
