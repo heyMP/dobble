@@ -1,10 +1,9 @@
+import { SignalWatcher } from '@lit-labs/preact-signals';
 import { LitElement, PropertyValues, html, unsafeCSS } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import styles from './dobble-playing.css?raw';
 import animationStyles from 'open-props/animations.shadow.min.css?raw';
-import { SYMBOLS } from '../lib/symbols.ts';
-import type { Card } from '../lib/types.ts';
-import { partykit } from '../partykit.ts';
+import { PartyKitRoom } from '../PartyKitRoom.ts';
 
 /**
  * An example element.
@@ -13,8 +12,7 @@ import { partykit } from '../partykit.ts';
  * @csspart button - The button
  */
 @customElement('dobble-playing')
-export class MyElement extends LitElement {
-
+export class MyElement extends SignalWatcher(LitElement) {
   /**
    * The number of times the button has been clicked.
    */
@@ -25,9 +23,6 @@ export class MyElement extends LitElement {
   symbols = 8;
 
   @state()
-  cards: Card[] = [];
-
-  @state()
   currentIndex = 0;
 
   @property({ reflect: true, type: Boolean, attribute: 'wrong-selection' })
@@ -36,15 +31,19 @@ export class MyElement extends LitElement {
   @property({ reflect: true })
   state: 'start' | 'playing' = "playing";
 
+  private partyKitRoom?: PartyKitRoom;
+
   constructor() {
     super();
   }
 
-  protected updated(changedProperties: PropertyValues): void {
+  protected update(changedProperties: PropertyValues): void {
     if (changedProperties.has('id')) {
       if (!this.id) return;
-      partykit(this.id);
+      this.partyKitRoom = new PartyKitRoom(this.id);
+      this.requestUpdate();
     }
+    super.update(changedProperties);
   }
 
   override render() {
@@ -63,7 +62,7 @@ export class MyElement extends LitElement {
   renderPlaying() {
     return html`
       <div class="card-container" @click=${this._cardClicked}>
-        ${this.cards.map((card, index) => html`
+        ${this.partyKitRoom?.cards.value.map((card, index) => html`
           <div class="card" data-card=${index} ?data-is-active=${this._isActiveCard(index)} ?data-is-previous=${this._isPreviousCard(index)}>
             ${card.map(symbol => html`<button class="symbol" data-symbol=${symbol}>${symbol}</button>`)}
           </div>

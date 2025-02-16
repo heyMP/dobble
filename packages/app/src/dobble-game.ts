@@ -3,7 +3,6 @@ import { LitElement, html, unsafeCSS } from 'lit'
 import { customElement } from 'lit/decorators.js'
 import styles from './dobble-game.css?raw';
 import "open-props/open-props.min.css?css";
-import './partykit.ts';
 import './views/dobble-home.ts';
 import './views/dobble-playing.ts';
 
