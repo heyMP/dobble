@@ -12,7 +12,7 @@ function getClientId() {
   return id;
 }
 
-export class PartyKitRoom extends EventTarget {
+export class PartyKitRoom {
   private partySocket: PartySocket;
 
   private clientId = getClientId();
@@ -21,8 +21,9 @@ export class PartyKitRoom extends EventTarget {
 
   users = signal<User[]>([]);
 
+  currentIndex = signal(0);
+
   constructor(public roomId: string) {
-    super();
     // connect to our server
     this.partySocket = new PartySocket({
       host: "localhost:1999",
@@ -59,8 +60,21 @@ export class PartyKitRoom extends EventTarget {
 
       if (event.type === 'cards-update') {
         this.cards.value = event.cards;
+        this.currentIndex.value = event.currentIndex;
+      }
+
+      if (event.type === 'matched') {
+        console.log(event);
+        this.currentIndex.value = event.currentIndex;
       }
     });
+  }
+
+  match() {
+    this.partySocket.send(JSON.stringify({
+      type: 'match',
+      clientId: this.clientId,
+    }));
   }
 }
 

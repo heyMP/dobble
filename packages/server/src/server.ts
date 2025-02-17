@@ -10,10 +10,12 @@ type User = {
 export type ServerEvent =
   | { type: 'user-entry', name: string, clientId: string }
   | { type: 'user-exit', clientId: string }
+  | { type: 'match', clientId: string }
 
 export type BroadCastEvent =
-  | { type: 'cards-update', cards: Card[] }
+  | { type: 'cards-update', cards: Card[], currentIndex: number }
   | { type: 'users-update', users: User[] }
+  | { type: 'matched', currentIndex: number }
 
 export default class Server implements Party.Server {
   constructor(readonly room: Party.Room) { }
@@ -21,6 +23,48 @@ export default class Server implements Party.Server {
   users: User[] = [];
 
   cards: Card[] = [];
+
+  currentIndex: number = 0;
+
+  onConnect(conn: Party.Connection, ctx: Party.ConnectionContext) {
+    if (this.cards.length === 0) {
+      this.cards = generate();
+    }
+
+    conn.send(JSON.stringify({
+      type: 'cards-update',
+      cards: this.cards,
+      currentIndex: 0,
+    } satisfies BroadCastEvent));
+
+    conn.send(JSON.stringify({
+      type: 'users-update',
+      users: this.users,
+    } satisfies BroadCastEvent));
+  }
+
+  onMessage(message: string, sender: Party.Connection) {
+    const event = JSON.parse(message) as ServerEvent;
+
+    if (event.type === 'user-entry') {
+      this.addUser({
+        name: event.name,
+        clientId: event.clientId,
+        id: sender.id
+      });
+    }
+
+    if (event.type === 'user-exit') {
+      this.removeUser(event.clientId);
+    }
+
+    if (event.type === 'match') {
+      this.match(event);
+    }
+
+    // let's log the message
+    console.log(`connection ${sender.id} sent message: ${message}`);
+  }
 
   addUser(user: User) {
     const existingUserIndex = this.users.findIndex(i => i.clientId === user.clientId);
@@ -42,7 +86,7 @@ export default class Server implements Party.Server {
       JSON.stringify({
         type: 'users-update',
         users: this.users
-      } as BroadCastEvent),
+      } satisfies BroadCastEvent),
     );
   }
 
@@ -52,43 +96,20 @@ export default class Server implements Party.Server {
       JSON.stringify({
         type: 'users-update',
         users: this.users
-      } as BroadCastEvent),
+      } satisfies BroadCastEvent),
     );
   }
 
-  onConnect(conn: Party.Connection, ctx: Party.ConnectionContext) {
-    if (this.cards.length === 0) {
-      this.cards = generate();
-    }
+  // @TODO: need to account for when we've reached the end
+  match() {
+    this.currentIndex = this.currentIndex + 2;
 
-    conn.send(JSON.stringify({
-      type: 'cards-update',
-      cards: this.cards,
-    } as BroadCastEvent));
-
-    conn.send(JSON.stringify({
-      type: 'users-update',
-      users: this.users,
-    } as BroadCastEvent));
-  }
-
-  onMessage(message: string, sender: Party.Connection) {
-    const event = JSON.parse(message) as ServerEvent;
-
-    if (event.type === 'user-entry') {
-      this.addUser({
-        name: event.name,
-        clientId: event.clientId,
-        id: sender.id
-      });
-    }
-
-    if (event.type === 'user-exit') {
-      this.removeUser(event.clientId);
-    }
-
-    // let's log the message
-    console.log(`connection ${sender.id} sent message: ${message}`);
+    this.room.broadcast(
+      JSON.stringify({
+        type: 'matched',
+        currentIndex: this.currentIndex,
+      } satisfies BroadCastEvent),
+    );
   }
 }
 

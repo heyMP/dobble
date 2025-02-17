@@ -22,9 +22,6 @@ export class MyElement extends SignalWatcher(LitElement) {
   @property({ type: Number })
   symbols = 8;
 
-  @state()
-  currentIndex = 0;
-
   @property({ reflect: true, type: Boolean, attribute: 'wrong-selection' })
   wrongSelection = false;
 
@@ -41,7 +38,9 @@ export class MyElement extends SignalWatcher(LitElement) {
     if (changedProperties.has('id')) {
       if (!this.id) return;
       this.partyKitRoom = new PartyKitRoom(this.id);
-      this.requestUpdate();
+      this.partyKitRoom.currentIndex.subscribe(() => {
+        this.wrongSelection = false;
+      });
     }
     super.update(changedProperties);
   }
@@ -76,7 +75,8 @@ export class MyElement extends SignalWatcher(LitElement) {
    */
   private _startGameAction(): void {
     this.state = 'playing';
-    this.currentIndex = 0;
+    if (!this.partyKitRoom) { return; }
+    this.partyKitRoom.currentIndex.value = 0;
   }
 
   private _cardClicked(e: Event): void {
@@ -98,7 +98,8 @@ export class MyElement extends SignalWatcher(LitElement) {
   }
 
   private _matchSelected(): void {
-    this.currentIndex = this.currentIndex + 2;
+    if (!this.partyKitRoom) { return; }
+    this.partyKitRoom.match();
     this.wrongSelection = false;
   }
 
@@ -106,11 +107,13 @@ export class MyElement extends SignalWatcher(LitElement) {
    * CONDITIONALS
    */
   _isActiveCard(cardIndex: number): boolean {
-    return cardIndex === this.currentIndex || cardIndex === this.currentIndex + 1;
+    const currentIndex = this.partyKitRoom?.currentIndex.value;
+    return cardIndex === currentIndex || cardIndex === currentIndex + 1;
   }
 
   _isPreviousCard(cardIndex: number): boolean {
-    return cardIndex + 1 === this.currentIndex || cardIndex + 2 === this.currentIndex;
+    const currentIndex = this.partyKitRoom?.currentIndex.value;
+    return cardIndex + 1 === currentIndex || cardIndex + 2 === currentIndex;
   }
 
 
