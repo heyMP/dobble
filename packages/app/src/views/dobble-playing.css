@@ -60,6 +60,7 @@
   background: transparent;
   border: none;
   transition: transform .3s;
+  cursor: pointer;
 
   :host(:not([wrong-selection])) &:where(:hover, :focus-visible) {
     transform: scale(1.3);
@@ -77,10 +78,27 @@ button.action {
 }
 
 @keyframes wrong-selection {
-  0% { transform: translateX(0) scale(1.3) }
-  20% { transform: translateX(-5px) scale(1.3) }
-  40% { transform: translateX(5px) scale(1.3) }
-  60% { transform: translateX(-5px) scale(1.3) }
-  80% { transform: translateX(5px) scale(1.3) }
-  100% { transform: translateX(0) scale(1) }
+  0% {
+    transform: translateX(0) scale(1.3)
+  }
+
+  20% {
+    transform: translateX(-5px) scale(1.3)
+  }
+
+  40% {
+    transform: translateX(5px) scale(1.3)
+  }
+
+  60% {
+    transform: translateX(-5px) scale(1.3)
+  }
+
+  80% {
+    transform: translateX(5px) scale(1.3)
+  }
+
+  100% {
+    transform: translateX(0) scale(1)
+  }
 }
