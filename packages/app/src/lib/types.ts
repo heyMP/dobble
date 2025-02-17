@@ -7,3 +7,5 @@ export type User = {
   clientId: string;
   id: string;
 }
+
+export type Score = Record<User['clientId'], number>;

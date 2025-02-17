@@ -7,6 +7,8 @@ type User = {
   name: string,
 }
 
+type Score = Record<User['clientId'], number>;
+
 export type ServerEvent =
   | { type: 'user-entry', name: string, clientId: string }
   | { type: 'user-exit', clientId: string }
@@ -15,16 +17,19 @@ export type ServerEvent =
 export type BroadCastEvent =
   | { type: 'cards-update', cards: Card[], currentIndex: number }
   | { type: 'users-update', users: User[] }
+  | { type: 'score-update', score: Score }
   | { type: 'matched', currentIndex: number }
 
 export default class Server implements Party.Server {
   constructor(readonly room: Party.Room) { }
 
-  users: User[] = [];
-
   cards: Card[] = [];
 
   currentIndex: number = 0;
+
+  users: User[] = [];
+
+  score: Score = {};
 
   onConnect(conn: Party.Connection, ctx: Party.ConnectionContext) {
     if (this.cards.length === 0) {
@@ -41,6 +46,15 @@ export default class Server implements Party.Server {
       type: 'users-update',
       users: this.users,
     } satisfies BroadCastEvent));
+
+    conn.send(JSON.stringify({
+      type: 'score-update',
+      score: this.score,
+    } satisfies BroadCastEvent));
+  }
+
+  onClose(connection: Party.Connection): void | Promise<void> {
+    this.removeUser(connection.id);
   }
 
   onMessage(message: string, sender: Party.Connection) {
@@ -52,10 +66,6 @@ export default class Server implements Party.Server {
         clientId: event.clientId,
         id: sender.id
       });
-    }
-
-    if (event.type === 'user-exit') {
-      this.removeUser(event.clientId);
     }
 
     if (event.type === 'match') {
@@ -90,8 +100,8 @@ export default class Server implements Party.Server {
     );
   }
 
-  removeUser(clientId: User['clientId']) {
-    this.users = this.users.filter(i => i.clientId !== clientId);
+  removeUser(id: User['id']) {
+    this.users = this.users.filter(i => i.id !== id);
     this.room.broadcast(
       JSON.stringify({
         type: 'users-update',
@@ -101,9 +111,17 @@ export default class Server implements Party.Server {
   }
 
   // @TODO: need to account for when we've reached the end
-  match() {
-    this.currentIndex = this.currentIndex + 2;
+  match(event: Extract<ServerEvent, { type: 'match' }>) {
+    this.score[event.clientId] = (this.score[event.clientId] ?? 0) + 1;
 
+    this.room.broadcast(
+      JSON.stringify({
+        type: 'score-update',
+        score: this.score,
+      } satisfies BroadCastEvent),
+    );
+
+    this.currentIndex = this.currentIndex + 2;
     this.room.broadcast(
       JSON.stringify({
         type: 'matched',

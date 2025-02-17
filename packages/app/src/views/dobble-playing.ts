@@ -60,6 +60,25 @@ export class MyElement extends SignalWatcher(LitElement) {
 
   renderPlaying() {
     return html`
+      ${this.renderScore()}
+      ${this.renderCards()}
+    `;
+  }
+
+  renderScore() {
+    return html`
+      <div id="score">
+        <ul>
+          ${this.partyKitRoom?.users.value.map(user => html`
+            <li>${user.name}: ${this.partyKitRoom?.score.value[user.clientId] ?? 0}</li>
+          `)}
+        </ul>
+      </div>
+    `;
+  }
+
+  renderCards() {
+    return html`
       <div class="card-container" @click=${this._cardClicked}>
         ${this.partyKitRoom?.cards.value.map((card, index) => html`
           <div class="card" data-card=${index} ?data-is-active=${this._isActiveCard(index)} ?data-is-previous=${this._isPreviousCard(index)}>

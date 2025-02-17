@@ -1,6 +1,6 @@
 import {SignalWatcher, signal} from '@lit-labs/preact-signals';
 import PartySocket from "partysocket";
-import type { Card, User } from './lib/types.ts';
+import type { Card, User, Score } from './lib/types.ts';
 
 function getClientId() {
   const ss = sessionStorage.getItem('dobble-client-id');
@@ -22,6 +22,8 @@ export class PartyKitRoom {
   users = signal<User[]>([]);
 
   currentIndex = signal(0);
+
+  score = signal<Score>({});
 
   constructor(public roomId: string) {
     // connect to our server
@@ -63,8 +65,11 @@ export class PartyKitRoom {
         this.currentIndex.value = event.currentIndex;
       }
 
+      if (event.type === 'score-update') {
+        this.score.value = event.score;
+      }
+
       if (event.type === 'matched') {
-        console.log(event);
         this.currentIndex.value = event.currentIndex;
       }
     });
@@ -75,6 +80,10 @@ export class PartyKitRoom {
       type: 'match',
       clientId: this.clientId,
     }));
+  }
+
+  getUserScore(clientId: User['clientId']) {
+    return this.score.value[clientId] ?? 0;
   }
 }
 
