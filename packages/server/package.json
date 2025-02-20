@@ -2,8 +2,17 @@
   "name": "server",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/server.js",
+    "./*": "./src/*"
+  },
+  "files": [
+    "src/*.{js,md,map,txt,d.ts}"
+  ],
   "scripts": {
     "dev": "partykit dev --live",
+    "build": "tsc",
     "deploy": "partykit deploy"
   },
   "dependencies": {

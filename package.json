@@ -5,7 +5,8 @@
   "devDependencies": {},
   "scripts": {
     "app:dev": "npm run dev -w app",
-    "server:dev": "npm run dev -w server"
+    "server:dev": "npm run dev -w server",
+    "server:build": "npm run build -w server"
   },
   "keywords": [],
   "author": "",

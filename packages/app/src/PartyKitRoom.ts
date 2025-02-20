@@ -1,6 +1,7 @@
-import {SignalWatcher, signal} from '@lit-labs/preact-signals';
+import { signal } from '@lit-labs/preact-signals';
 import PartySocket from "partysocket";
-import type { Card, User, Score } from './lib/types.ts';
+import type { Card } from './lib/types.ts';
+import type { BroadCastEvent, ServerEvent, User, Score } from 'server';
 
 function getClientId() {
   const ss = sessionStorage.getItem('dobble-client-id');
@@ -36,7 +37,7 @@ export class PartyKitRoom {
   }
 
   init() {
-    this.partySocket.addEventListener('open', e => {
+    this.partySocket.addEventListener('open', () => {
       // send a message to the server
       this.partySocket.send(JSON.stringify({
         type: 'user-entry',
@@ -45,7 +46,7 @@ export class PartyKitRoom {
       }));
     });
 
-    this.partySocket.addEventListener('close', e => {
+    this.partySocket.addEventListener('close', () => {
       // send a message to the server
       this.partySocket.send(JSON.stringify({
         type: 'user-exit',
@@ -55,7 +56,7 @@ export class PartyKitRoom {
 
     // print each incoming message from the server to console
     this.partySocket.addEventListener("message", (e) => {
-      const event = JSON.parse(e.data);
+      const event = JSON.parse(e.data) as BroadCastEvent;
       if (event.type === 'users-update') {
         this.users.value = event.users;
       }
@@ -76,10 +77,12 @@ export class PartyKitRoom {
   }
 
   match() {
-    this.partySocket.send(JSON.stringify({
+    const event: ServerEvent = {
       type: 'match',
       clientId: this.clientId,
-    }));
+    };
+
+    this.partySocket.send(JSON.stringify(event));
   }
 
   getUserScore(clientId: User['clientId']) {

@@ -1,13 +1,13 @@
 import type * as Party from "partykit/server";
 import { generate, type Card } from './dobble';
 
-type User = {
+export type User = {
   id: string,
   clientId: string,
   name: string,
 }
 
-type Score = Record<User['clientId'], number>;
+export type Score = Record<User['clientId'], number>;
 
 export type ServerEvent =
   | { type: 'user-entry', name: string, clientId: string }
