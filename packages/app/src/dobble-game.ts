@@ -22,10 +22,6 @@ export class MyElement extends LitElement {
 
   override render() {
     return html`
-      <ul>
-        <li><a href="/">Home</a></li>
-        <li><a href="/play/test">Play</a></li>
-      </ul>
       ${this._routes.outlet()}
     `;
   }
