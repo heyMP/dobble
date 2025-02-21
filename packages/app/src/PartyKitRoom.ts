@@ -1,7 +1,7 @@
 import { signal } from '@lit-labs/preact-signals';
 import PartySocket from "partysocket";
 import type { Card } from './lib/types.ts';
-import type { BroadCastEvent, ServerEvent, User, Score } from 'server';
+import type { BroadCastEvent, ServerEvent, User, Score, State } from 'server';
 
 function getClientId() {
   const ss = sessionStorage.getItem('dobble-client-id');
@@ -25,6 +25,8 @@ export class PartyKitRoom {
   currentIndex = signal(0);
 
   score = signal<Score>({});
+
+  state = signal<State>('start');
 
   constructor(public roomId: string) {
     // connect to our server
@@ -73,6 +75,14 @@ export class PartyKitRoom {
       if (event.type === 'matched') {
         this.currentIndex.value = event.currentIndex;
       }
+
+      if (event.type === 'matched') {
+        this.currentIndex.value = event.currentIndex;
+      }
+
+      if (event.type === 'state-update') {
+        this.state.value = event.state;
+      }
     });
   }
 
@@ -81,12 +91,18 @@ export class PartyKitRoom {
       type: 'match',
       clientId: this.clientId,
     };
-
     this.partySocket.send(JSON.stringify(event));
   }
 
   getUserScore(clientId: User['clientId']) {
     return this.score.value[clientId] ?? 0;
+  }
+
+  startGame() {
+    const event: ServerEvent = {
+      type: 'start-game'
+    };
+    this.partySocket.send(JSON.stringify(event));
   }
 }
 

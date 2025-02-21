@@ -2,7 +2,7 @@ import { SignalWatcher } from '@lit-labs/preact-signals';
 import { LitElement, PropertyValues, html, unsafeCSS } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import styles from './dobble-playing.css?raw';
-import animationStyles from 'open-props/animations.shadow.min.css?raw';
+import sharedStyles from '../lib/shared-styles.js';
 import { PartyKitRoom } from '../PartyKitRoom.ts';
 
 /**
@@ -26,7 +26,7 @@ export class MyElement extends SignalWatcher(LitElement) {
   wrongSelection = false;
 
   @property({ reflect: true })
-  state: 'start' | 'playing' = "playing";
+  state: 'loading' | 'start' | 'playing' = "loading";
 
   private partyKitRoom?: PartyKitRoom;
 
@@ -36,17 +36,22 @@ export class MyElement extends SignalWatcher(LitElement) {
 
   protected update(changedProperties: PropertyValues): void {
     if (changedProperties.has('roomId')) {
-      console.log(this.roomId)
       if (!this.roomId) return;
       this.partyKitRoom = new PartyKitRoom(this.roomId);
       this.partyKitRoom.currentIndex.subscribe(() => {
         this.wrongSelection = false;
+      });
+      this.partyKitRoom.state.subscribe((state) => {
+        this.state = state;
       });
     }
     super.update(changedProperties);
   }
 
   override render() {
+    if (this.state === 'loading') {
+      return html`loading...`;
+    }
     if (this.state === 'start') {
       return this.renderStart();
     }
@@ -56,7 +61,9 @@ export class MyElement extends SignalWatcher(LitElement) {
   }
 
   renderStart() {
-    return html`<button @click=${this._startGameAction}>Start Game</button>`;
+    return html`
+      <button @click=${this._startGameAction}>Start Game</button>
+    `;
   }
 
   renderPlaying() {
@@ -94,9 +101,10 @@ export class MyElement extends SignalWatcher(LitElement) {
    * ACTIONS
    */
   private _startGameAction(): void {
-    this.state = 'playing';
     if (!this.partyKitRoom) { return; }
-    this.partyKitRoom.currentIndex.value = 0;
+    this.partyKitRoom.startGame();
+    // this.state = 'playing';
+    // this.partyKitRoom.currentIndex.value = 0;
   }
 
   private _cardClicked(e: Event): void {
@@ -141,8 +149,8 @@ export class MyElement extends SignalWatcher(LitElement) {
 
 
   static override styles = [
+    sharedStyles,
     unsafeCSS(styles),
-    unsafeCSS(animationStyles),
   ];
 }
 

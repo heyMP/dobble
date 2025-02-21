@@ -7,18 +7,22 @@ export type User = {
   name: string,
 }
 
+export type State = 'start' | 'playing';
+
 export type Score = Record<User['clientId'], number>;
 
 export type ServerEvent =
   | { type: 'user-entry', name: string, clientId: string }
   | { type: 'user-exit', clientId: string }
   | { type: 'match', clientId: string }
+  | { type: 'start-game' }
 
 export type BroadCastEvent =
   | { type: 'cards-update', cards: Card[], currentIndex: number }
   | { type: 'users-update', users: User[] }
   | { type: 'score-update', score: Score }
   | { type: 'matched', currentIndex: number }
+  | { type: 'state-update', state: State }
 
 export default class Server implements Party.Server {
   constructor(readonly room: Party.Room) { }
@@ -30,6 +34,8 @@ export default class Server implements Party.Server {
   users: User[] = [];
 
   score: Score = {};
+
+  state: State = 'start';
 
   onConnect(conn: Party.Connection, ctx: Party.ConnectionContext) {
     if (this.cards.length === 0) {
@@ -51,6 +57,11 @@ export default class Server implements Party.Server {
       type: 'score-update',
       score: this.score,
     } satisfies BroadCastEvent));
+
+    conn.send(JSON.stringify({
+      type: 'state-update',
+      state: this.state,
+    } satisfies BroadCastEvent));
   }
 
   onClose(connection: Party.Connection): void | Promise<void> {
@@ -66,6 +77,10 @@ export default class Server implements Party.Server {
         clientId: event.clientId,
         id: sender.id
       });
+    }
+
+    if (event.type === 'start-game') {
+      this.startGame();
     }
 
     if (event.type === 'match') {
@@ -126,6 +141,16 @@ export default class Server implements Party.Server {
       JSON.stringify({
         type: 'matched',
         currentIndex: this.currentIndex,
+      } satisfies BroadCastEvent),
+    );
+  }
+
+  startGame() {
+    this.state = 'playing';
+    this.room.broadcast(
+      JSON.stringify({
+        type: 'state-update',
+        state: this.state,
       } satisfies BroadCastEvent),
     );
   }

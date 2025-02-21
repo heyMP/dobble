@@ -1,7 +1,7 @@
 import { LitElement, html, unsafeCSS } from 'lit'
 import { customElement } from 'lit/decorators.js'
 import styles from './dobble-home.css?raw';
-import animationStyles from 'open-props/animations.shadow.min.css?raw';
+import sharedStyles from '../lib/shared-styles.js';
 
 /**
  * An example element.
@@ -18,8 +18,8 @@ export class MyElement extends LitElement {
   }
 
   static styles = [
+    sharedStyles,
     unsafeCSS(styles),
-    unsafeCSS(animationStyles),
   ];
 }
 
