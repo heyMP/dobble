@@ -1,0 +1,22 @@
+{
+  "name": "app",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@lit-labs/preact-signals": "^1.0.3",
+    "@lit-labs/router": "^0.1.4",
+    "lit": "^3.2.1",
+    "open-props": "^1.7.12",
+    "partysocket": "^1.0.3"
+  },
+  "devDependencies": {
+    "server": "*",
+    "typescript": "~5.7.2",
+    "vite": "^6.1.0"
+  }
+}
