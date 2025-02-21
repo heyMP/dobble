@@ -29,7 +29,7 @@ export class PartyKitRoom {
   constructor(public roomId: string) {
     // connect to our server
     this.partySocket = new PartySocket({
-      host: "localhost:1999",
+      host: import.meta.env.VITE_PARTYKIT_HOST,
       room: this.roomId,
     });
 
