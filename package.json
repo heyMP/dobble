@@ -5,6 +5,7 @@
   "devDependencies": {},
   "scripts": {
     "app:dev": "npm run dev -w app",
+    "app:build": "npm run build -w app",
     "server:dev": "npm run dev -w server",
     "server:build": "npm run build -w server"
   },
