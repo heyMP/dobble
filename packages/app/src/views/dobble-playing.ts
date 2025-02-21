@@ -17,7 +17,7 @@ export class MyElement extends SignalWatcher(LitElement) {
    * The number of times the button has been clicked.
    */
   @state()
-  id?: string;
+  roomId?: string;
 
   @property({ type: Number })
   symbols = 8;
@@ -35,9 +35,10 @@ export class MyElement extends SignalWatcher(LitElement) {
   }
 
   protected update(changedProperties: PropertyValues): void {
-    if (changedProperties.has('id')) {
-      if (!this.id) return;
-      this.partyKitRoom = new PartyKitRoom(this.id);
+    if (changedProperties.has('roomId')) {
+      console.log(this.roomId)
+      if (!this.roomId) return;
+      this.partyKitRoom = new PartyKitRoom(this.roomId);
       this.partyKitRoom.currentIndex.subscribe(() => {
         this.wrongSelection = false;
       });
@@ -127,6 +128,9 @@ export class MyElement extends SignalWatcher(LitElement) {
    */
   _isActiveCard(cardIndex: number): boolean {
     const currentIndex = this.partyKitRoom?.currentIndex.value;
+    if (currentIndex === undefined) {
+      return false;
+    }
     return cardIndex === currentIndex || cardIndex === currentIndex + 1;
   }
 
