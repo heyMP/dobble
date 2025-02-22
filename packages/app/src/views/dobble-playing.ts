@@ -49,20 +49,16 @@ export class MyElement extends SignalWatcher(LitElement) {
   }
 
   override render() {
-    if (this.state === 'loading') {
-      return html`loading...`;
-    }
-    if (this.state === 'start') {
-      return this.renderStart();
-    }
     if (this.state === 'playing') {
       return this.renderPlaying()
     }
+    return this.renderStart();
   }
 
   renderStart() {
+    const disabled = this.state === 'loading';
     return html`
-      <button class="start-game" @click=${this._startGameAction}>Start Game</button>
+      <button id="start-game-cta" @click=${this._startGameAction} ?disabled=${disabled}>Start Game</button>
     `;
   }
 
