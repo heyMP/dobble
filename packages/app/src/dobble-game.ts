@@ -22,7 +22,9 @@ export class MyElement extends LitElement {
 
   override render() {
     return html`
-      ${this._routes.outlet()}
+      <div id="wrapper" class="light">
+        ${this._routes.outlet()}
+      </div>
     `;
   }
 

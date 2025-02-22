@@ -26,7 +26,7 @@ export class PartyKitRoom {
 
   score = signal<Score>({});
 
-  state = signal<State>('start');
+  state = signal<State | 'loading'>('loading');
 
   constructor(public roomId: string) {
     // connect to our server

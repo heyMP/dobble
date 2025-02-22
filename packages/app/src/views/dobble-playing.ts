@@ -62,7 +62,7 @@ export class MyElement extends SignalWatcher(LitElement) {
 
   renderStart() {
     return html`
-      <button @click=${this._startGameAction}>Start Game</button>
+      <button class="start-game" @click=${this._startGameAction}>Start Game</button>
     `;
   }
 
@@ -90,7 +90,7 @@ export class MyElement extends SignalWatcher(LitElement) {
       <div class="card-container" @click=${this._cardClicked}>
         ${this.partyKitRoom?.cards.value.map((card, index) => html`
           <div class="card" data-card=${index} ?data-is-active=${this._isActiveCard(index)} ?data-is-previous=${this._isPreviousCard(index)}>
-            ${card.map(symbol => html`<button class="symbol" data-symbol=${symbol}>${symbol}</button>`)}
+            ${card.map(symbol => html`<button class="u-clean symbol" data-symbol=${symbol}>${symbol}</button>`)}
           </div>
         `)}
       </div>
@@ -103,8 +103,6 @@ export class MyElement extends SignalWatcher(LitElement) {
   private _startGameAction(): void {
     if (!this.partyKitRoom) { return; }
     this.partyKitRoom.startGame();
-    // this.state = 'playing';
-    // this.partyKitRoom.currentIndex.value = 0;
   }
 
   private _cardClicked(e: Event): void {

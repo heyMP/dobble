@@ -1,6 +1,6 @@
 :host {
   position: relative;
-  display: block;
+  display: grid;
   width: 100%;
   margin: auto;
   max-width: 900px;
@@ -75,6 +75,12 @@
 button.action {
   height: fit-content;
   width: fit-content;
+}
+
+button.start-game {
+  height: fit-content;
+  width: fit-content;
+  place-self: center;
 }
 
 @keyframes wrong-selection {
