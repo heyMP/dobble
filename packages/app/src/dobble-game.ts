@@ -1,6 +1,7 @@
 import { Router } from '@lit-labs/router';
 import { LitElement, html, unsafeCSS } from 'lit'
 import { customElement } from 'lit/decorators.js'
+import "urlpattern-polyfill";
 import styles from './dobble-game.css?raw';
 // @ts-ignore
 import "open-props/open-props.min.css?css";

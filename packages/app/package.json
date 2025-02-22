@@ -12,7 +12,8 @@
     "@lit-labs/router": "^0.1.4",
     "lit": "^3.2.1",
     "open-props": "^1.7.12",
-    "partysocket": "^1.0.3"
+    "partysocket": "^1.0.3",
+    "urlpattern-polyfill": "^10.0.0"
   },
   "devDependencies": {
     "server": "*",
