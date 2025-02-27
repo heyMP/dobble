@@ -1,0 +1,58 @@
+:host {
+  display: grid;
+  place-items: center;
+}
+
+/* form { */
+/*   margin: var(--size-fluid-3); */
+/* } */
+
+form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, fit-content);
+  row-gap: 10px;
+  column-gap: .5em;
+  border: none;
+
+  &:where([hidden]) {
+    display: none;
+  }
+}
+
+label {
+  display: none;
+}
+
+input:where([type="text"]) {
+  width: 80%;
+  padding: 12px;
+  border: 2px solid #0074d9;
+  border-radius: 25px;
+  font-size: 20px;
+  text-align: center;
+  width: auto;
+}
+
+button {
+  width: auto;
+  padding: 12px;
+  background-color: #0074d9;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  text-transform: uppercase;
+}
+
+button:hover {
+  background-color: #005bb5;
+}
+
+.grid-col-full {
+  grid-column: 1 / -1;
+}

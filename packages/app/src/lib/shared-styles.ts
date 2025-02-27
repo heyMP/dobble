@@ -16,4 +16,11 @@ export default css`
     border: none;
     box-shadow: none;
   }
+
+  .u-card {
+    padding: 3rem;
+    background: white;
+    box-shadow: var(--shadow-3);
+    border-radius: var(--radius-conditional-3);
+  }
 `;

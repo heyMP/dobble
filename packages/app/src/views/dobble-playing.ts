@@ -13,11 +13,11 @@ import { PartyKitRoom } from '../PartyKitRoom.ts';
  */
 @customElement('dobble-playing')
 export class MyElement extends SignalWatcher(LitElement) {
-  /**
-   * The number of times the button has been clicked.
-   */
   @state()
   roomId?: string;
+
+  @state()
+  name: string | null = window.localStorage.getItem('dobble-name');
 
   @property({ type: Number })
   symbols = 8;
@@ -34,10 +34,17 @@ export class MyElement extends SignalWatcher(LitElement) {
     super();
   }
 
+  protected firstUpdated(_changedProperties: PropertyValues): void {
+    const name = new URLSearchParams(window.location.href).get('name');
+    if (name) {
+      this.name = name;
+    }
+  }
+
   protected update(changedProperties: PropertyValues): void {
     if (changedProperties.has('roomId')) {
-      if (!this.roomId) return;
-      this.partyKitRoom = new PartyKitRoom(this.roomId);
+      if (!this.roomId || !this.name) return;
+      this.partyKitRoom = new PartyKitRoom(this.roomId, this.name);
       this.partyKitRoom.currentIndex.subscribe(() => {
         this.wrongSelection = false;
       });

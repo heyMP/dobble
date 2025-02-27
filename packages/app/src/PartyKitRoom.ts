@@ -28,11 +28,11 @@ export class PartyKitRoom {
 
   state = signal<State | 'loading'>('loading');
 
-  constructor(public roomId: string) {
+  constructor(public roomId: string, public name: string) {
     // connect to our server
     this.partySocket = new PartySocket({
       host: import.meta.env.VITE_PARTYKIT_HOST,
-      room: this.roomId,
+      room: roomId,
     });
 
     this.init();
@@ -41,9 +41,10 @@ export class PartyKitRoom {
   init() {
     this.partySocket.addEventListener('open', () => {
       // send a message to the server
+      console.log(this.name)
       this.partySocket.send(JSON.stringify({
         type: 'user-entry',
-        name: 'heymp',
+        name: this.name,
         clientId: this.clientId,
       }));
     });
