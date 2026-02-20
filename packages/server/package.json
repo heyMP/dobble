@@ -4,22 +4,22 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/server.js",
+    ".": "./src/main.ts",
     "./*": "./src/*"
   },
-  "files": [
-    "src/*.{js,md,map,txt,d.ts}"
-  ],
   "scripts": {
     "dev": "partykit dev --live",
     "build": "tsc",
-    "deploy": "partykit deploy"
+    "deploy": "partykit deploy",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "partysocket": "^1.0.2"
   },
   "devDependencies": {
     "partykit": "^0.0.110",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vitest": "^3.2.4"
   }
 }
