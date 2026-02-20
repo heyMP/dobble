@@ -2,8 +2,9 @@ import { useRef } from 'react';
 import { useSignal } from '@preact/signals-react';
 import { batch } from '@preact/signals-react';
 import { useGameRoom } from '../../hooks/useGameRoom';
-import type { DobbleBroadcastEvent, Card } from 'shared/games/dobble/types';
+import type { BroadcastEvent } from '../../hooks/useGameRoom';
 import { SYMBOLS_PER_CARD } from 'shared/games/dobble/types';
+import type { Card } from 'shared/games/dobble/types';
 import './DobbleGame.css';
 
 interface Props {
@@ -29,26 +30,26 @@ const SYMBOL_POSITIONS = (() => {
 })();
 
 export function DobbleGame({ roomId, playerName }: Props) {
-  const room = useGameRoom<DobbleBroadcastEvent>('dobble', roomId, playerName);
+  const room = useGameRoom(roomId, playerName);
   const cards = useSignal<Card[]>([]);
   const currentIndex = useSignal(0);
 
   const eventRegistered = useRef(false);
   if (!eventRegistered.current) {
     eventRegistered.current = true;
-    room.onGameEvent((event) => {
-      if (event.type === 'dobble:cards') {
+    room.onMessage((event: BroadcastEvent) => {
+      if (event.type === 'cards-update') {
         batch(() => {
-          cards.value = event.cards;
+          cards.value = event.cards as Card[];
           currentIndex.value = event.currentIndex;
         });
-      } else if (event.type === 'dobble:matched') {
+      } else if (event.type === 'matched') {
         currentIndex.value = event.currentIndex;
       }
     });
   }
 
-  if (room.phase.value === 'lobby') {
+  if (room.state.value === 'start') {
     return (
       <div className="dobble-lobby">
         <h1>Dobble</h1>
@@ -56,14 +57,14 @@ export function DobbleGame({ roomId, playerName }: Props) {
           Room: <strong>{roomId}</strong>
         </p>
         <div className="player-list">
-          <h2>Players ({room.players.value.length})</h2>
+          <h2>Players ({room.users.value.length})</h2>
           <ul>
-            {room.players.value.map((p) => (
-              <li key={p.clientId}>{p.name}</li>
+            {room.users.value.map((u) => (
+              <li key={u.clientId}>{u.name}</li>
             ))}
           </ul>
         </div>
-        {room.players.value.length >= 2 ? (
+        {room.users.value.length >= 2 ? (
           <button className="start-btn" onClick={() => room.startGame()}>
             Start Game
           </button>
@@ -77,12 +78,13 @@ export function DobbleGame({ roomId, playerName }: Props) {
   const idx = currentIndex.value;
   const card1 = idx < cards.value.length ? cards.value[idx] : null;
   const card2 = idx + 1 < cards.value.length ? cards.value[idx + 1] : null;
-  const pairsLeft = cards.value.length > 0
-    ? Math.floor((cards.value.length - idx) / 2)
-    : 0;
+  const pairsLeft =
+    cards.value.length > 0
+      ? Math.floor((cards.value.length - idx) / 2)
+      : 0;
 
-  if (room.phase.value === 'finished' || (!card1 || !card2)) {
-    const sorted = Object.entries(room.scores.value).sort(
+  if (!card1 || !card2) {
+    const sorted = Object.entries(room.score.value).sort(
       ([, a], [, b]) => b - a,
     );
 
@@ -93,13 +95,13 @@ export function DobbleGame({ roomId, playerName }: Props) {
           <h2>Final Scores</h2>
           <ol>
             {sorted.map(([clientId, score], i) => {
-              const player = room.players.value.find(
-                (p) => p.clientId === clientId,
+              const user = room.users.value.find(
+                (u) => u.clientId === clientId,
               );
               return (
                 <li key={clientId} className={i === 0 ? 'winner' : ''}>
                   <span className="player-name">
-                    {player?.name ?? 'Unknown'}
+                    {user?.name ?? 'Unknown'}
                   </span>
                   <span className="player-score">{score}</span>
                 </li>
@@ -107,9 +109,6 @@ export function DobbleGame({ roomId, playerName }: Props) {
             })}
           </ol>
         </div>
-        <button className="reset-btn" onClick={() => room.resetGame()}>
-          Play Again
-        </button>
       </div>
     );
   }
@@ -119,11 +118,11 @@ export function DobbleGame({ roomId, playerName }: Props) {
 
   const handleSymbolClick = (symbol: string) => {
     if (symbol === matchingSymbol) {
-      room.sendEvent({ type: 'dobble:match', clientId: room.clientId });
+      room.sendMatch();
     }
   };
 
-  const sorted = Object.entries(room.scores.value).sort(
+  const sorted = Object.entries(room.score.value).sort(
     ([, a], [, b]) => b - a,
   );
 
@@ -144,19 +143,19 @@ export function DobbleGame({ roomId, playerName }: Props) {
         <ul>
           {sorted.length > 0
             ? sorted.map(([clientId, score]) => {
-                const player = room.players.value.find(
-                  (p) => p.clientId === clientId,
+                const user = room.users.value.find(
+                  (u) => u.clientId === clientId,
                 );
                 return (
                   <li key={clientId}>
-                    <span>{player?.name ?? 'Unknown'}</span>
+                    <span>{user?.name ?? 'Unknown'}</span>
                     <span className="score-value">{score}</span>
                   </li>
                 );
               })
-            : room.players.value.map((p) => (
-                <li key={p.clientId}>
-                  <span>{p.name}</span>
+            : room.users.value.map((u) => (
+                <li key={u.clientId}>
+                  <span>{u.name}</span>
                   <span className="score-value">0</span>
                 </li>
               ))}

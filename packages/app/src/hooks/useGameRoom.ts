@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { signal, batch } from '@preact/signals-react';
 import PartySocket from 'partysocket';
-import type { Player, GamePhase, BaseBroadcastEvent, BaseClientEvent } from 'shared';
 
 function getClientId(): string {
   const stored = sessionStorage.getItem('game-client-id');
@@ -13,43 +12,57 @@ function getClientId(): string {
 
 type ConnectionStatus = 'connecting' | 'connected' | 'disconnected';
 
-const BASE_EVENT_TYPES = new Set([
-  'room:sync',
-  'player:joined',
-  'player:left',
-  'scores:updated',
-  'phase:changed',
-]);
+export type User = {
+  id: string;
+  clientId: string;
+  name: string;
+};
 
-export class GameRoomStore<TBroadcastEvent extends { type: string }> {
-  players = signal<Player[]>([]);
-  phase = signal<GamePhase>('lobby');
-  scores = signal<Record<string, number>>({});
+export type State = 'start' | 'playing';
+
+export type Score = Record<string, number>;
+
+export type ServerEvent =
+  | { type: 'user-entry'; name: string; clientId: string }
+  | { type: 'user-exit'; clientId: string }
+  | { type: 'match'; clientId: string }
+  | { type: 'start-game' };
+
+export type BroadcastEvent =
+  | { type: 'cards-update'; cards: unknown[]; currentIndex: number }
+  | { type: 'users-update'; users: User[] }
+  | { type: 'score-update'; score: Score }
+  | { type: 'matched'; currentIndex: number }
+  | { type: 'state-update'; state: State };
+
+export class GameRoomStore {
+  users = signal<User[]>([]);
+  state = signal<State>('start');
+  score = signal<Score>({});
   connectionStatus = signal<ConnectionStatus>('connecting');
 
   readonly roomId: string;
   private socket: PartySocket;
   readonly clientId = getClientId();
   private playerName: string;
-  private gameEventHandlers: ((event: TBroadcastEvent) => void)[] = [];
+  private messageHandlers: ((event: BroadcastEvent) => void)[] = [];
 
-  constructor(gameType: string, roomId: string, playerName: string) {
+  constructor(roomId: string, playerName: string) {
     this.roomId = roomId;
     this.playerName = playerName;
 
     this.socket = new PartySocket({
       host: import.meta.env.VITE_PARTYKIT_HOST,
       room: roomId,
-      party: gameType,
     });
 
     this.socket.addEventListener('open', () => {
       this.connectionStatus.value = 'connected';
       this.send({
-        type: 'player:join',
+        type: 'user-entry',
         name: this.playerName,
         clientId: this.clientId,
-      } satisfies BaseClientEvent);
+      });
     });
 
     this.socket.addEventListener('close', () => {
@@ -57,76 +70,59 @@ export class GameRoomStore<TBroadcastEvent extends { type: string }> {
     });
 
     this.socket.addEventListener('message', (e) => {
-      const event = JSON.parse(e.data) as BaseBroadcastEvent | TBroadcastEvent;
+      const event = JSON.parse(e.data) as BroadcastEvent;
       this.handleMessage(event);
     });
   }
 
-  private handleMessage(event: BaseBroadcastEvent | TBroadcastEvent): void {
-    const msg = event as BaseBroadcastEvent;
-
-    switch (msg.type) {
-      case 'room:sync':
-        batch(() => {
-          this.phase.value = msg.phase;
-          this.players.value = msg.players;
-          this.scores.value = msg.scores;
-        });
+  private handleMessage(event: BroadcastEvent): void {
+    switch (event.type) {
+      case 'users-update':
+        this.users.value = event.users;
         return;
-      case 'player:joined':
-      case 'player:left':
-        this.players.value = msg.players;
+      case 'score-update':
+        this.score.value = event.score;
         return;
-      case 'scores:updated':
-        this.scores.value = msg.scores;
-        return;
-      case 'phase:changed':
-        this.phase.value = msg.phase;
+      case 'state-update':
+        this.state.value = event.state;
         return;
     }
 
-    if (!BASE_EVENT_TYPES.has(event.type)) {
-      for (const handler of this.gameEventHandlers) {
-        handler(event as TBroadcastEvent);
-      }
+    for (const handler of this.messageHandlers) {
+      handler(event);
     }
   }
 
-  private send(event: BaseClientEvent | object): void {
+  private send(event: ServerEvent): void {
     this.socket.send(JSON.stringify(event));
   }
 
-  sendEvent(event: object): void {
-    this.send(event);
+  sendMatch(): void {
+    this.send({ type: 'match', clientId: this.clientId });
   }
 
   startGame(): void {
-    this.send({ type: 'game:start' } satisfies BaseClientEvent);
+    this.send({ type: 'start-game' });
   }
 
-  resetGame(): void {
-    this.send({ type: 'game:reset' } satisfies BaseClientEvent);
-  }
-
-  onGameEvent(handler: (event: TBroadcastEvent) => void): void {
-    this.gameEventHandlers.push(handler);
+  onMessage(handler: (event: BroadcastEvent) => void): void {
+    this.messageHandlers.push(handler);
   }
 
   dispose(): void {
-    this.gameEventHandlers = [];
+    this.messageHandlers = [];
     this.socket.close();
   }
 }
 
-export function useGameRoom<TBroadcastEvent extends { type: string }>(
-  gameType: string,
+export function useGameRoom(
   roomId: string,
   playerName: string,
-): GameRoomStore<TBroadcastEvent> {
-  const storeRef = useRef<GameRoomStore<TBroadcastEvent> | null>(null);
+): GameRoomStore {
+  const storeRef = useRef<GameRoomStore | null>(null);
 
   if (!storeRef.current) {
-    storeRef.current = new GameRoomStore<TBroadcastEvent>(gameType, roomId, playerName);
+    storeRef.current = new GameRoomStore(roomId, playerName);
   }
 
   useEffect(() => {
